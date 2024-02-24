@@ -616,6 +616,7 @@ dependencies = [
  "k8s-openapi",
  "prost",
  "tokio",
+ "tokio-stream",
  "tonic",
  "tonic-build",
 ]

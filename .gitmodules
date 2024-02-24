@@ -1,3 +1,6 @@
 [submodule "cloudnative-pg"]
 	path = cloudnative-pg
 	url = git@github.com:cloudnative-pg/cloudnative-pg.git
+[submodule "cnpg-i"]
+	path = cnpg-i
+	url = git@github.com:cloudnative-pg/cnpg-i.git
