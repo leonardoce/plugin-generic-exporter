@@ -1,28 +1,28 @@
-use crate::identity::operator_lifecycle_server::OperatorLifecycle;
+use crate::cnpg;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
 pub struct OperatorLifecycleImpl {}
 
 #[tonic::async_trait]
-impl OperatorLifecycle for OperatorLifecycleImpl {
+impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImpl {
     /// GetCapabilities gets the capabilities of the Lifecycle service
     async fn get_capabilities(
         &self,
-        _request: Request<crate::identity::OperatorLifecycleCapabilitiesRequest>,
+        _request: Request<cnpg::OperatorLifecycleCapabilitiesRequest>,
     ) -> std::result::Result<
-        Response<crate::identity::OperatorLifecycleCapabilitiesResponse>,
+        Response<cnpg::OperatorLifecycleCapabilitiesResponse>,
         Status,
     > {
         return Ok(Response::new(
-            crate::identity::OperatorLifecycleCapabilitiesResponse {
+            cnpg::OperatorLifecycleCapabilitiesResponse {
                 lifecycle_capabilities: vec![
-                    crate::identity::OperatorLifecycleCapabilities {
+                    cnpg::OperatorLifecycleCapabilities {
                         group: "".to_string(),
                         kind: "Pod".to_string(),
                         operation_types: vec![
-                            crate::identity::OperatorOperationType {
-                                r#type: crate::identity::operator_operation_type::Type::Create.into(),
+                            cnpg::OperatorOperationType {
+                                r#type: cnpg::operator_operation_type::Type::Create.into(),
                             }
                         ],
                     }
@@ -35,11 +35,11 @@ impl OperatorLifecycle for OperatorLifecycleImpl {
     /// before the CNPG operator applies them to the Kubernetes cluster.
     async fn lifecycle_hook(
         &self,
-        _request: Request<crate::identity::OperatorLifecycleRequest>,
-    ) -> std::result::Result<Response<crate::identity::OperatorLifecycleResponse>, Status> {
+        _request: Request<cnpg::OperatorLifecycleRequest>,
+    ) -> std::result::Result<Response<cnpg::OperatorLifecycleResponse>, Status> {
         return Ok(
             Response::new(
-                crate::identity::OperatorLifecycleResponse{
+                cnpg::OperatorLifecycleResponse{
                     json_patch: vec![],
                 }
             )

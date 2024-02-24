@@ -1,20 +1,18 @@
-use crate::identity::identity_server::Identity;
+use crate::cnpg;
 use std::collections::HashMap;
 use tonic::{Request, Response, Status};
-
-tonic::include_proto!("cnpgi.identity.v1");
 
 #[derive(Debug, Default)]
 pub struct IdentityImpl {}
 
 #[tonic::async_trait]
-impl Identity for IdentityImpl {
+impl cnpg::identity_server::Identity for IdentityImpl {
     /// GetPluginMetadata gets the plugin metadata
     async fn get_plugin_metadata(
         &self,
-        _request: Request<GetPluginMetadataRequest>,
-    ) -> Result<Response<GetPluginMetadataResponse>, Status> {
-        Ok(Response::new(GetPluginMetadataResponse {
+        _request: Request<cnpg::GetPluginMetadataRequest>,
+    ) -> Result<Response<cnpg::GetPluginMetadataResponse>, Status> {
+        Ok(Response::new(cnpg::GetPluginMetadataResponse {
             name: "plugin-generic-exporter.leonardoce.io".to_string(),
             version: "0.0.1".to_string(),
             display_name: "Generic SQL Exporter plugin".to_string(),
@@ -33,13 +31,13 @@ impl Identity for IdentityImpl {
     /// GetPluginCapabilities gets information about this plugin
     async fn get_plugin_capabilities(
         &self,
-        _request: Request<GetPluginCapabilitiesRequest>,
-    ) -> Result<Response<GetPluginCapabilitiesResponse>, Status> {
-        Ok(Response::new(GetPluginCapabilitiesResponse {
-            capabilities: vec![PluginCapability {
-                r#type: Some(plugin_capability::Type::Service(
-                    plugin_capability::Service {
-                        r#type: plugin_capability::service::Type::LifecycleService.into(),
+        _request: Request<cnpg::GetPluginCapabilitiesRequest>,
+    ) -> Result<Response<cnpg::GetPluginCapabilitiesResponse>, Status> {
+        Ok(Response::new(cnpg::GetPluginCapabilitiesResponse {
+            capabilities: vec![cnpg::PluginCapability {
+                r#type: Some(cnpg::plugin_capability::Type::Service(
+                    cnpg::plugin_capability::Service {
+                        r#type: cnpg::plugin_capability::service::Type::LifecycleService.into(),
                     },
                 )),
             }],
@@ -49,8 +47,8 @@ impl Identity for IdentityImpl {
     /// Probe is used to tell if the plugin is ready to receive requests
     async fn probe(
         &self,
-        _request: Request<ProbeRequest>,
-    ) -> Result<Response<ProbeResponse>, Status> {
-        Ok(Response::new(ProbeResponse { ready: true }))
+        _request: Request<cnpg::ProbeRequest>,
+    ) -> Result<Response<cnpg::ProbeResponse>, Status> {
+        Ok(Response::new(cnpg::ProbeResponse { ready: true }))
     }
 }
