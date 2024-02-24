@@ -2,6 +2,8 @@ use std::path::Path;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::Server;
+use simplelog;
+use log::info;
 
 mod cnpg;
 mod identity;
@@ -9,6 +11,9 @@ mod operator_lifecycle;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _ = simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default());
+    info!("Starting");
+
     let path = "/plugins/plugin-generic-exporter.leonardoce.io";
 
     std::fs::create_dir_all(Path::new(path).parent().unwrap())?;
@@ -23,9 +28,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(cnpg::identity_server::IdentityServer::new(
             identity_implementation,
         ))
-        .add_service(cnpg::operator_lifecycle_server::OperatorLifecycleServer::new(
-            operator_lifecycle_implementation
-        ))
+        .add_service(
+            cnpg::operator_lifecycle_server::OperatorLifecycleServer::new(
+                operator_lifecycle_implementation,
+            ),
+        )
         .serve_with_incoming(uds_stream)
         .await?;
 

@@ -10,6 +10,9 @@ tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 tokio-stream = { version = "0.1.14", features = [ "net" ]}
 k8s-openapi = { version = "0.21.1", features = ["latest"] }
 json-patch = "*"
+serde_json = "*"
+log = "*"
+simplelog = { version = "*" }
 
 [build-dependencies]
 tonic-build = "0.11"
