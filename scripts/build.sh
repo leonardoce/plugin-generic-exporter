@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
 cd "$(dirname "$0")/.." || exit
-cargo build
+
+# The real build happens inside the docker container
+cargo check
