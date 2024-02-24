@@ -13,6 +13,8 @@ json-patch = "*"
 serde_json = "*"
 log = "*"
 simplelog = { version = "*" }
+anyhow = "*"
+thiserror = "1"
 
 [build-dependencies]
 tonic-build = "0.11"

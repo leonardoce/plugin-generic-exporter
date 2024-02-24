@@ -1,8 +1,8 @@
 use crate::cnpg;
 use json_patch;
 use k8s_openapi::api::core::v1 as api;
+use log::{debug, info};
 use tonic::{Request, Response, Status};
-use log::debug;
 
 #[derive(Debug, Default)]
 pub struct OperatorLifecycleImpl {}
@@ -14,7 +14,6 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         &self,
         _request: Request<cnpg::OperatorLifecycleCapabilitiesRequest>,
     ) -> std::result::Result<Response<cnpg::OperatorLifecycleCapabilitiesResponse>, Status> {
-
         return Ok(Response::new(cnpg::OperatorLifecycleCapabilitiesResponse {
             lifecycle_capabilities: vec![cnpg::OperatorLifecycleCapabilities {
                 group: "".to_string(),
@@ -32,7 +31,23 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         &self,
         request: Request<cnpg::OperatorLifecycleRequest>,
     ) -> std::result::Result<Response<cnpg::OperatorLifecycleResponse>, Status> {
-        // When this method is called, cloudnative-pg is trying to create a Pod.
+        // We get and parse the cluster definition
+        let helper = crate::helper::DataLoader::from_cluster(
+            crate::metadata::PLUGIN_NAME,
+            &request.get_ref().cluster_definition,
+        )
+        .map_err(|err| {
+            Status::internal(format!(
+                "While decoding cluster definition: {}",
+                err.to_string()
+            ))
+        })?;
+
+        let parameters = helper.find_configuration().map_err(|err| {
+            Status::invalid_argument(format!("invalid cluster content: {}", err.to_string()))
+        })?;
+
+        // When this method is called, cloudnative-pg is creating a Pod.
         // Let's inject the generic exporter sidecar here.
         let original_pod: api::Pod = serde_json::from_slice(&request.get_ref().object_definition)
             .map_err(|err| Status::internal(err.to_string()))?;
@@ -42,8 +57,12 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         // Create a generic exporter Sidecar
         let mut generic_exporter_sidecar: api::Container = Default::default();
         generic_exporter_sidecar.name = "sql-exporter".to_string();
-        generic_exporter_sidecar.image =
-            Some("ghcr.io/justwatchcom/sql_exporter:latest".to_string()); // TODO LEO: get this from the configuration
+        generic_exporter_sidecar.image = Some(
+            parameters
+                .get(crate::metadata::IMAGE_NAME_PARAMETER_NAME)
+                .unwrap_or(&crate::metadata::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
+                .to_string(),
+        );
         generic_exporter_sidecar.env = Some(vec![api::EnvVar {
             name: "CONFIG".to_string(),
             value: Some("/config/config.yml".to_string()),
@@ -57,7 +76,23 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
                 read_only: Some(true),
                 sub_path: None,
                 sub_path_expr: None,
-            }, // TODO LEO: mount the PG socket directory volume
+            },
+            api::VolumeMount {
+                mount_path: "/controller".to_string(),
+                mount_propagation: None,
+                name: "scratch-data".to_string(),
+                read_only: None,
+                sub_path: None,
+                sub_path_expr: None,
+            },
+            api::VolumeMount {
+                mount_path: "/run".to_string(),
+                mount_propagation: None,
+                name: "scratch-data".to_string(),
+                read_only: None,
+                sub_path: None,
+                sub_path_expr: None,
+            },
         ]);
 
         // Create a volume for the exporter configuration
@@ -70,7 +105,12 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
                 mode: None,
                 path: "config.yml".to_string(),
             }]),
-            name: Some("config_name".to_string()), // TODO LEO: get this from the configuration
+            name: Some(
+                parameters
+                .get(crate::metadata::CONFIG_MAP_PARAMETER_NAME)
+                .ok_or(Status::invalid_argument("Missing config map parameter"))?
+                .to_string(),
+            ),
             optional: Some(false),
         });
 
@@ -104,7 +144,7 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         let serialized_patch = serde_json::to_string(&patch)
             .map_err(|e| Status::internal(format!("While serializing patch: {}", e)))?;
 
-        debug!("Patch serializzata: {}", serialized_patch);
+        debug!("Serialized patch: {}", serialized_patch);
 
         return Ok(Response::new(cnpg::OperatorLifecycleResponse {
             json_patch: serialized_patch.into_bytes(),

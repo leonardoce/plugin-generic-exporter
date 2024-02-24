@@ -13,7 +13,7 @@ impl cnpg::identity_server::Identity for IdentityImpl {
         _request: Request<cnpg::GetPluginMetadataRequest>,
     ) -> Result<Response<cnpg::GetPluginMetadataResponse>, Status> {
         Ok(Response::new(cnpg::GetPluginMetadataResponse {
-            name: "plugin-generic-exporter.leonardoce.io".to_string(),
+            name: crate::metadata::PLUGIN_NAME.to_string(),
             version: "0.0.1".to_string(),
             display_name: "Generic SQL Exporter plugin".to_string(),
             description: "Add the generic SQL exporter sidecar to CNPG instances".to_string(),

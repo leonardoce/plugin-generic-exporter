@@ -1,17 +1,20 @@
+use log::info;
+use simplelog;
 use std::path::Path;
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::Server;
-use simplelog;
-use log::info;
 
 mod cnpg;
+mod helper;
 mod identity;
+mod metadata;
 mod operator_lifecycle;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default());
+    let _ =
+        simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default());
     info!("Starting");
 
     let path = "/plugins/plugin-generic-exporter.leonardoce.io";
