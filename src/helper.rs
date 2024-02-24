@@ -30,7 +30,7 @@ impl DataLoader {
         })
     }
 
-    /// find_configuration
+    /// find_configuration gets the current plugin configuration
     pub fn find_configuration(&self) -> Result<HashMap<String, String>> {
         let plugins = self.cluster["spec"]["plugins"]
             .as_array()
