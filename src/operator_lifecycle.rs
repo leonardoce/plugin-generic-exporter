@@ -33,7 +33,7 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
     ) -> std::result::Result<Response<cnpg::OperatorLifecycleResponse>, Status> {
         // We get and parse the cluster definition
         let helper = crate::helper::DataLoader::from_cluster(
-            crate::metadata::PLUGIN_NAME,
+            crate::consts::PLUGIN_NAME,
             &request.get_ref().cluster_definition,
         )
         .map_err(|err| {
@@ -59,8 +59,8 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         generic_exporter_sidecar.name = "sql-exporter".to_string();
         generic_exporter_sidecar.image = Some(
             parameters
-                .get(crate::metadata::IMAGE_NAME_PARAMETER_NAME)
-                .unwrap_or(&crate::metadata::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
+                .get(crate::consts::IMAGE_NAME_PARAMETER_NAME)
+                .unwrap_or(&crate::consts::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
                 .to_string(),
         );
         generic_exporter_sidecar.env = Some(vec![
@@ -114,7 +114,7 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
             }]),
             name: Some(
                 parameters
-                    .get(crate::metadata::CONFIG_MAP_PARAMETER_NAME)
+                    .get(crate::consts::CONFIG_MAP_PARAMETER_NAME)
                     .ok_or(Status::invalid_argument("Missing config map parameter"))?
                     .to_string(),
             ),

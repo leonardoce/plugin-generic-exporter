@@ -8,7 +8,7 @@ use tonic::transport::Server;
 mod cnpg;
 mod helper;
 mod identity;
-mod metadata;
+mod consts;
 mod operator_lifecycle;
 
 #[tokio::main]
