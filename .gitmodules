@@ -1,0 +1,3 @@
+[submodule "cloudnative-pg"]
+	path = cloudnative-pg
+	url = git@github.com:cloudnative-pg/cloudnative-pg.git
