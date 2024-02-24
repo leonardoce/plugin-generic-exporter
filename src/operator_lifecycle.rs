@@ -1,7 +1,7 @@
 use crate::cnpg;
 use json_patch;
 use k8s_openapi::api::core::v1 as api;
-use log::{debug, info};
+use log::debug;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
@@ -63,11 +63,18 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
                 .unwrap_or(&crate::metadata::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
                 .to_string(),
         );
-        generic_exporter_sidecar.env = Some(vec![api::EnvVar {
-            name: "CONFIG".to_string(),
-            value: Some("/config/config.yml".to_string()),
-            value_from: None,
-        }]);
+        generic_exporter_sidecar.env = Some(vec![
+            api::EnvVar {
+                name: "CONFIG".to_string(),
+                value: Some("/config/config.yml".to_string()),
+                value_from: None,
+            },
+            api::EnvVar {
+                name: "LOGLEVEL".to_string(),
+                value: Some("info".to_string()),
+                value_from: None,
+            },
+        ]);
         generic_exporter_sidecar.volume_mounts = Some(vec![
             api::VolumeMount {
                 mount_path: "/config".to_string(),
@@ -107,9 +114,9 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
             }]),
             name: Some(
                 parameters
-                .get(crate::metadata::CONFIG_MAP_PARAMETER_NAME)
-                .ok_or(Status::invalid_argument("Missing config map parameter"))?
-                .to_string(),
+                    .get(crate::metadata::CONFIG_MAP_PARAMETER_NAME)
+                    .ok_or(Status::invalid_argument("Missing config map parameter"))?
+                    .to_string(),
             ),
             optional: Some(false),
         });
