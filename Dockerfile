@@ -8,6 +8,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cp /usr/src/myapp/target/release/plugin-generic-exporter /usr/local/bin
 
 FROM debian:bookworm-slim
-USER 1001:1001
+USER 10001:10001
 COPY --from=builder /usr/local/bin/plugin-generic-exporter /usr/local/bin/plugin-generic-exporter
 CMD ["plugin-generic-exporter"]
