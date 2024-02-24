@@ -14,7 +14,11 @@
           "cilium": "none"
         },
         "ghcr.io/devcontainers-contrib/features/kubectx-kubens:1": {},
-        "ghcr.io/dhoeric/features/stern:1": {}
+        "ghcr.io/dhoeric/features/stern:1": {},
+        "ghcr.io/devcontainers/features/go:1": {
+          "version": "1.22"
+        },
+        "ghcr.io/guiyomh/features/golangci-lint:0": {}
       },
     
       // Needed by kind and k3s to enable kube-proxy's ipvs mode
