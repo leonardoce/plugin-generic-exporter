@@ -34,13 +34,22 @@ impl cnpg::identity_server::Identity for IdentityImpl {
         _request: Request<cnpg::GetPluginCapabilitiesRequest>,
     ) -> Result<Response<cnpg::GetPluginCapabilitiesResponse>, Status> {
         Ok(Response::new(cnpg::GetPluginCapabilitiesResponse {
-            capabilities: vec![cnpg::PluginCapability {
-                r#type: Some(cnpg::plugin_capability::Type::Service(
-                    cnpg::plugin_capability::Service {
-                        r#type: cnpg::plugin_capability::service::Type::LifecycleService.into(),
-                    },
-                )),
-            }],
+            capabilities: vec![
+                cnpg::PluginCapability {
+                    r#type: Some(cnpg::plugin_capability::Type::Service(
+                        cnpg::plugin_capability::Service {
+                            r#type: cnpg::plugin_capability::service::Type::LifecycleService.into(),
+                        },
+                    )),
+                },
+                cnpg::PluginCapability {
+                    r#type: Some(cnpg::plugin_capability::Type::Service(
+                        cnpg::plugin_capability::Service {
+                            r#type: cnpg::plugin_capability::service::Type::OperatorService.into(),
+                        },
+                    )),
+                },
+            ],
         }))
     }
 

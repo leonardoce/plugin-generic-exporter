@@ -43,10 +43,6 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
             ))
         })?;
 
-        let parameters = helper.find_configuration().map_err(|err| {
-            Status::invalid_argument(format!("invalid cluster content: {}", err.to_string()))
-        })?;
-
         // When this method is called, cloudnative-pg is creating a Pod.
         // Let's inject the generic exporter sidecar here.
         let original_pod: api::Pod = serde_json::from_slice(&request.get_ref().object_definition)
@@ -58,9 +54,9 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         let mut generic_exporter_sidecar: api::Container = Default::default();
         generic_exporter_sidecar.name = "sql-exporter".to_string();
         generic_exporter_sidecar.image = Some(
-            parameters
-                .get(crate::consts::IMAGE_NAME_PARAMETER_NAME)
-                .unwrap_or(&crate::consts::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
+            helper
+                .get_parameter(crate::consts::IMAGE_NAME_PARAMETER_NAME)
+                .unwrap_or(crate::consts::IMAGE_NAME_PARAMETER_DEFAULT.to_string())
                 .to_string(),
         );
         generic_exporter_sidecar.env = Some(vec![
@@ -113,8 +109,8 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
                 path: "config.yml".to_string(),
             }]),
             name: Some(
-                parameters
-                    .get(crate::consts::CONFIG_MAP_PARAMETER_NAME)
+                helper
+                    .get_parameter(crate::consts::CONFIG_MAP_PARAMETER_NAME)
                     .ok_or(Status::invalid_argument("Missing config map parameter"))?
                     .to_string(),
             ),

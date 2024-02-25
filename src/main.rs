@@ -6,9 +6,10 @@ use tokio_stream::wrappers::UnixListenerStream;
 use tonic::transport::Server;
 
 mod cnpg;
+mod consts;
 mod helper;
 mod identity;
-mod consts;
+mod operator;
 mod operator_lifecycle;
 
 #[tokio::main]
@@ -26,6 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let identity_implementation = identity::IdentityImpl::default();
     let operator_lifecycle_implementation = operator_lifecycle::OperatorLifecycleImpl::default();
+    let operator_implementation = operator::OperatorImpl::default();
 
     Server::builder()
         .add_service(cnpg::identity_server::IdentityServer::new(
@@ -36,6 +38,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 operator_lifecycle_implementation,
             ),
         )
+        .add_service(cnpg::operator_server::OperatorServer::new(
+            operator_implementation,
+        ))
         .serve_with_incoming(uds_stream)
         .await?;
 
