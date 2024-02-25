@@ -42,20 +42,24 @@ impl DataLoader {
                 name: name.to_string(),
             })?;
 
-        let parameters = current_plugin["parameters"]
-            .as_object()
-            .ok_or(DataLoaderError::UnexpectedPluginParameters)?
-            .iter()
-            .map(|(name, value)| {
-                (
-                    name.to_string(),
-                    value
-                        .as_str()
-                        .map(|x| x.to_string())
-                        .unwrap_or("".to_string()),
-                )
-            })
-            .collect();
+        let parameters = if current_plugin["parameters"].is_null() {
+            HashMap::new()
+        } else {
+            current_plugin["parameters"]
+                .as_object()
+                .ok_or(DataLoaderError::UnexpectedPluginParameters)?
+                .iter()
+                .map(|(name, value)| {
+                    (
+                        name.to_string(),
+                        value
+                            .as_str()
+                            .map(|x| x.to_string())
+                            .unwrap_or("".to_string()),
+                    )
+                })
+                .collect()
+        };
 
         Ok(DataLoader {
             cluster,
@@ -112,8 +116,6 @@ impl DataLoader {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Context;
-
     use super::*;
 
     const CLUSTER_JSON: &str = r#"
@@ -121,46 +123,10 @@ mod tests {
     "apiVersion": "postgresql.cnpg.io/v1",
     "kind": "Cluster",
     "metadata": {
-        "annotations": {
-            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"postgresql.cnpg.io/v1\",\"kind\":\"Cluster\",\"metadata\":{\"annotations\":{},\"name\":\"cluster-example\",\"namespace\":\"default\"},\"spec\":{\"instances\":3,\"plugins\":[{\"name\":\"plugin-generic-exporter.leonardoce.io\",\"parameters\":{\"configMapName\":\"sql-exporter-config\"}}],\"storage\":{\"size\":\"1Gi\"}}}\n"
-        },
-        "creationTimestamp": "2024-02-24T22:21:05Z",
-        "generation": 1,
         "name": "cluster-example",
-        "namespace": "default",
-        "resourceVersion": "32454",
-        "uid": "ae2c1788-78ac-48bd-b8b6-5bf7937dc320"
+        "namespace": "default"
     },
     "spec": {
-        "affinity": {
-            "podAntiAffinityType": "preferred"
-        },
-        "bootstrap": {
-            "initdb": {
-                "database": "app",
-                "encoding": "UTF8",
-                "localeCType": "C",
-                "localeCollate": "C",
-                "owner": "app"
-            }
-        },
-        "enableSuperuserAccess": false,
-        "failoverDelay": 0,
-        "imageName": "ghcr.io/cloudnative-pg/postgresql:16.2",
-        "instances": 3,
-        "logLevel": "info",
-        "maxSyncReplicas": 0,
-        "minSyncReplicas": 0,
-        "monitoring": {
-            "customQueriesConfigMap": [
-                {
-                    "key": "queries",
-                    "name": "cnpg-default-monitoring"
-                }
-            ],
-            "disableDefaultQueries": false,
-            "enablePodMonitor": false
-        },
         "plugins": [
             {
                 "name": "plugin-generic-exporter.leonardoce.io",
@@ -168,60 +134,47 @@ mod tests {
                     "configMapName": "sql-exporter-config"
                 }
             }
-        ],
-        "postgresGID": 26,
-        "postgresUID": 26,
-        "postgresql": {
-            "parameters": {
-                "archive_mode": "on",
-                "archive_timeout": "5min",
-                "dynamic_shared_memory_type": "posix",
-                "log_destination": "csvlog",
-                "log_directory": "/controller/log",
-                "log_filename": "postgres",
-                "log_rotation_age": "0",
-                "log_rotation_size": "0",
-                "log_truncate_on_rotation": "false",
-                "logging_collector": "on",
-                "max_parallel_workers": "32",
-                "max_replication_slots": "32",
-                "max_worker_processes": "32",
-                "shared_memory_type": "mmap",
-                "shared_preload_libraries": "",
-                "ssl_max_protocol_version": "TLSv1.3",
-                "ssl_min_protocol_version": "TLSv1.3",
-                "wal_keep_size": "512MB",
-                "wal_receiver_timeout": "5s",
-                "wal_sender_timeout": "5s"
-            },
-            "syncReplicaElectionConstraint": {
-                "enabled": false
-            }
-        },
-        "primaryUpdateMethod": "restart",
-        "primaryUpdateStrategy": "unsupervised",
-        "replicationSlots": {
-            "highAvailability": {
-                "enabled": true,
-                "slotPrefix": "_cnpg_"
-            },
-            "synchronizeReplicas": {
-                "enabled": true
-            },
-            "updateInterval": 30
-        },
-        "resources": {},
-        "smartShutdownTimeout": 180,
-        "startDelay": 3600,
-        "stopDelay": 1800,
-        "storage": {
-            "resizeInUseVolumes": true,
-            "size": "1Gi"
-        },
-        "switchoverDelay": 3600
+        ]
     }
-}
-    "#;
+}"#;
+
+    const CLUSTER_JSON_NULL_PARAMETERS: &str = r#"
+{
+    "apiVersion": "postgresql.cnpg.io/v1",
+    "kind": "Cluster",
+    "metadata": {
+        "name": "cluster-example",
+        "namespace": "default"
+    },
+    "spec": {
+        "plugins": [
+            {
+                "name": "plugin-generic-exporter.leonardoce.io",
+                "parameters": null
+            }
+        ]
+    }
+}    
+"#;
+
+    const CLUSTER_JSON_EMPTY_PARAMETERS: &str = r#"
+{
+    "apiVersion": "postgresql.cnpg.io/v1",
+    "kind": "Cluster",
+    "metadata": {
+        "name": "cluster-example",
+        "namespace": "default"
+    },
+    "spec": {
+        "plugins": [
+            {
+                "name": "plugin-generic-exporter.leonardoce.io",
+                "parameters": {}
+            }
+        ]
+    }
+}    
+"#;
 
     #[test]
     fn test_decode() {
@@ -273,5 +226,27 @@ mod tests {
             .calculate_cluster_patch(&new_params)
             .expect("error while calculating patch");
         assert_eq!(patch.as_array().expect("JSON patches are arrays").len(), 2);
+    }
+
+    #[test]
+    fn test_decode_null_parameters() {
+        let helper = DataLoader::from_cluster(
+            crate::consts::PLUGIN_NAME,
+            CLUSTER_JSON_NULL_PARAMETERS.as_bytes(),
+        )
+        .unwrap();
+
+        assert_eq!(helper.parameters.len(), 0);
+    }
+
+    #[test]
+    fn test_decode_empty_parameters() {
+        let helper = DataLoader::from_cluster(
+            crate::consts::PLUGIN_NAME,
+            CLUSTER_JSON_EMPTY_PARAMETERS.as_bytes(),
+        )
+        .unwrap();
+
+        assert_eq!(helper.parameters.len(), 0);
     }
 }

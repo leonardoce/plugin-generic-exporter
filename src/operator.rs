@@ -100,13 +100,10 @@ impl cnpg::operator_server::Operator for OperatorImpl {
             .entry("imageName".to_string())
             .or_insert(crate::consts::IMAGE_NAME_PARAMETER_DEFAULT.to_string());
 
-        
         let patch_value = loader
             .calculate_cluster_patch(&new_parameters)
-            .map_err(|e| {
-                Status::internal(format!("Error while calculating JSON patch: {}", e))
-            })?;
-        let serialized_patch:String = serde_json::to_string(&patch_value)
+            .map_err(|e| Status::internal(format!("Error while calculating JSON patch: {}", e)))?;
+        let serialized_patch: String = serde_json::to_string(&patch_value)
             .map_err(|e| Status::internal(format!("While serializing patch: {}", e)))?;
 
         Ok(Response::new(cnpg::OperatorMutateClusterResult {
