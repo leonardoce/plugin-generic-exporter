@@ -44,7 +44,6 @@
                     },
                     {
                         "image": "ghcr.io/leonardoce/plugin-generic-exporter:main",
-                        "imagePullPolicy": "Never",
                         "name": "plugin-generic-exporter",
                         "volumeMounts": [
                             {
