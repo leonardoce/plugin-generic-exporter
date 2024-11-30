@@ -97,6 +97,7 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
                 sub_path_expr: None,
             },
         ]);
+        generic_exporter_sidecar.restart_policy = Some("Always".to_string());
 
         // Create a volume for the exporter configuration
         let mut exporter_configuration_volume: api::Volume = Default::default();
@@ -121,7 +122,9 @@ impl cnpg::operator_lifecycle_server::OperatorLifecycle for OperatorLifecycleImp
         pod.spec
             .as_mut()
             .ok_or(Status::invalid_argument("CNPG Pod without spec?"))?
-            .containers
+            .init_containers
+            .as_mut()
+            .ok_or(Status::invalid_argument("CNPG Pod without init containers?"))?
             .push(generic_exporter_sidecar);
         pod.spec
             .as_mut()

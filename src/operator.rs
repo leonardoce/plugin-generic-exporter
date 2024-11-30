@@ -110,6 +110,29 @@ impl cnpg::operator_server::Operator for OperatorImpl {
             json_patch: serialized_patch.into_bytes(),
         }))
     }
+
+    async fn set_status_in_cluster(
+        &self,
+        _: tonic::Request<cnpg::SetStatusInClusterRequest>,
+    ) -> std::result::Result<
+        tonic::Response<cnpg::SetStatusInClusterResponse>,
+        tonic::Status,
+    > {
+        Ok(Response::new(cnpg::SetStatusInClusterResponse{
+            json_status: vec![],
+        }))
+    }
+
+    async fn deregister(
+        &self,
+        _: tonic::Request<cnpg::DeregisterRequest>,
+    ) -> std::result::Result<
+        tonic::Response<cnpg::DeregisterResponse>,
+        tonic::Status,
+    > {
+        Ok(Response::new(cnpg::DeregisterResponse{
+        }))
+    }
 }
 
 fn validate(loader: &DataLoader) -> Vec<cnpg::ValidationError> {
