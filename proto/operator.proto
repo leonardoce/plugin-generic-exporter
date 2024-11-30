@@ -1,12 +1,12 @@
 syntax = "proto3";
-package cnpgi.adapter.v1;
+package cnpgi.operator.v1;
 option go_package = "github.com/cloudnative-pg/cnpg-i/pkg/operator";
 
 service Operator {
   // GetCapabilities gets the capabilities of the WAL service
   rpc GetCapabilities(OperatorCapabilitiesRequest) returns (OperatorCapabilitiesResult) {}
 
-  // ValidateCreate improves the behaviour of the validating webhook that
+  // ValidateCreate improves the behavior of the validating webhook that
   // is called on creation of the Cluster resources
   rpc ValidateClusterCreate(OperatorValidateClusterCreateRequest) returns (OperatorValidateClusterCreateResult) {}
 
@@ -16,6 +16,14 @@ service Operator {
 
   // MutateCluster fills in the defaults inside a Cluster resource
   rpc MutateCluster(OperatorMutateClusterRequest) returns (OperatorMutateClusterResult) {}
+
+  // SetStatusInCluster is invoked at the end of the reconciliation loop and it is used to set the plugin status
+  // inside the .status.plugins[pluginName] map key
+  rpc SetStatusInCluster(SetStatusInClusterRequest) returns (SetStatusInClusterResponse) {}
+
+  // Deregister is invoked when the plugin is removed from the cluster definition. It is expected that the plugin
+  // executes its cleanup logic when this method is invoked.
+  rpc Deregister(DeregisterRequest) returns (DeregisterResponse) {}
 }
 
 message OperatorCapabilitiesRequest {
@@ -63,6 +71,16 @@ message OperatorMutateClusterRequest {
   bytes definition = 1;
 }
 
+message DeregisterRequest {
+  // This field is REQUIRED. Value of this field is the JSON
+  // serialization of the Cluster that should receive the
+  // default values
+  bytes definition = 1;
+}
+
+message DeregisterResponse {
+}
+
 message OperatorMutateClusterResult {
   // This field is OPTIONAL. Value of this field is a JSONPatch
   // to be applied on the passed Cluster definition
@@ -99,9 +117,13 @@ message OperatorCapability {
       // reply to the MutateCluster RPC request
       TYPE_MUTATE_CLUSTER = 3;
 
-      // TYPE_MUTATE_POD indicates that the Plugin is able to
-      // reply to the MutatePod RPC request
-      TYPE_MUTATE_POD = 4;
+      // TYPE_SET_STATUS_IN_CLUSTER indicates that the Plugin is able to
+      // reply to the SetStatusInCluster RPC request
+      TYPE_SET_STATUS_IN_CLUSTER = 5;
+
+      // TYPE_DEREGISTER indicates that the Plugin is able to execute the cleanup logic once it is removed from
+      // the cluster definition
+      TYPE_DEREGISTER = 6;
     }
 
     Type type = 1;
@@ -110,4 +132,16 @@ message OperatorCapability {
   oneof type {
     RPC rpc = 1;
   }
+}
+
+message SetStatusInClusterRequest {
+  // This field is REQUIRED. Value of this field is the JSON
+  // serialization of the current Cluster definition
+  bytes cluster = 1;
+}
+
+message SetStatusInClusterResponse {
+  // This field is OPTIONAL. No value means no-op, otherwise the passed json is set inside the
+  // .status.plugins[pluginName] key
+  bytes json_status = 1;
 }

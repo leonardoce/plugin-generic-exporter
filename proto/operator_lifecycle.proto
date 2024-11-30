@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cnpgi.identity.v1;
+package cnpgi.operator_lifecycle.v1;
 option go_package = "github.com/cloudnative-pg/cnpg-i/pkg/lifecycle";
 
 service OperatorLifecycle {
@@ -40,6 +40,7 @@ message OperatorOperationType {
     TYPE_UPDATE = 2;
     TYPE_CREATE = 3;
     TYPE_DELETE = 4;
+    TYPE_DEREGISTER = 5;
   }
 
   Type type = 1;

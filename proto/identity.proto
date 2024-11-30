@@ -44,7 +44,7 @@ message GetPluginMetadataResponse {
 
   // License of the plugin. This field is REQUIRED.
   string license = 7;
-  
+
   // URL of the license of the plugin. This field is REQUIRED.
   string license_url = 8;
 
@@ -76,7 +76,7 @@ message PluginCapability {
       // TYPE_OPERATOR_SERVICE indicated that the Plugin provider RPCs
       // for the Operator service.
       // The presence of this capability determines whether the CO will
-      // attempt to invoke the REQUIRED Opearator RPCs, as well
+      // attempt to invoke the REQUIRED Operator RPCs, as well
       // as specific RPCs as indicated by GetCapabilities.
       TYPE_OPERATOR_SERVICE = 1;
 
@@ -101,6 +101,10 @@ message PluginCapability {
       // TYPE_RECONCILER_HOOKS indicates that the Plugin provides RPCs to
       // enhance the behavior of the reconcilers
       TYPE_RECONCILER_HOOKS = 5;
+
+      // TYPE_RESTORE_JOB_HOOKS indicates that the Plugin provides RPCs to
+      // enhance the behavior of the restore jobs
+      TYPE_RESTORE_JOB = 6;
     }
     Type type = 1;
   }
